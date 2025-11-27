@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Layout from "./src/components/Layout";
+import ToastProvider from "./src/components/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Whats Mind",
+  title: "WhatsMind - WhatsApp Automation Platform",
   description:
-    "Signals-first workspace that keeps every ritual and conversation in sync.",
+    "Automate your WhatsApp campaigns, manage contacts, and track engagement with WhatsMind.",
 };
 
 export default function RootLayout({
@@ -24,11 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        {children}
+        <ToastProvider>
+          <Layout>{children}</Layout>
+        </ToastProvider>
       </body>
     </html>
   );
