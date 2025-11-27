@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Whats Mind
 
-## Getting Started
+Signals-first rituals workspace inspired by the `mail-app` project. This repo ships a thin slice—sample UI, small backend, and typed data helpers—so you can plug in the real automation stack later.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+/app
+ └─ api/snapshots      → typed GET + POST handlers (mock data today)
+/components
+ └─ insight-form.tsx   → client component that calls the API
+/lib
+ └─ sample-data.ts     → strongly typed fixtures + helpers
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+# open http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The landing page combines server components (for instant metrics) and a client form that POSTs to `/api/snapshots`. All copy + visuals are placeholder quality-of-life helpers—swap with your brand as needed.
 
-## Learn More
+## Sample backend
 
-To learn more about Next.js, take a look at the following resources:
+- `GET /api/snapshots`: returns the current mock conversations plus computed metrics.
+- `POST /api/snapshots`: accepts `{ topic, note, owner? }` and echoes a drafted insight to prove the wiring.
+- Logic lives in `lib/sample-data.ts` so you can replace the fixtures with data from Supabase, Mongo, n8n, etc.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+When you wire the real system, mirror how `mail-app` handles auth, queues, and logging—this starter deliberately stays minimal so it is easy to diff.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Next steps
 
-## Deploy on Vercel
+1. Replace the entries in `lib/sample-data.ts` with live data sources.
+2. Introduce the same domain modules from `mail-app` (campaigns, dashboards, unsubscribers) as incremental routes.
+3. Extend `/api/snapshots` or add new route handlers to point at your orchestrator or workflow engine.
+4. Keep Docker + compose files aligned so both apps can ship with the same infra primitives.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The repo still runs on stock Next.js 16, React 19, Tailwind 4 (via the experimental `@import "tailwindcss"` entry). No additional deps were added so you can choose the rest of the stack freely.
