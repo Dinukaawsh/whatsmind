@@ -30,7 +30,7 @@ const InputBox = forwardRef<HTMLInputElement, InputBoxProps>(
         )}
         <input
           ref={ref}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-md placeholder-[#A0A0A0] hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-[#e9e8ff] min-w-0 text-ellipsis ${
+          className={`w-full px-3 py-2 border border-gray-300 rounded-md placeholder-[#A0A0A0] hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-[#e9e8ff] min-w-0 text-ellipsis text-black ${
             icon ? "pl-10" : ""
           } ${clearButton && props.value ? "pr-10" : "pr-24"} ${className}`}
           {...props}

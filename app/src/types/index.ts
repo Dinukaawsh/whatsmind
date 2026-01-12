@@ -90,9 +90,27 @@ export interface User {
 export interface DashboardStats {
   totalCampaigns: number;
   activeCampaigns: number;
-  totalContacts: number;
+  totalLeads: number;
+  activeLeads: number;
   totalMessagesSent: number;
   deliveryRate: number;
   replyRate: number;
   recentCampaigns: Campaign[];
+  recentLeads?: Array<{
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    status: {
+      name: string;
+      color: string;
+    } | null;
+    company: string | null;
+    createdAt: string;
+  }>;
+  statusCounts?: Array<{
+    statusId: string | null;
+    count: number;
+  }>;
+  totalCompanies?: number;
 }

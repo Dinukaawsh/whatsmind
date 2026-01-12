@@ -20,6 +20,7 @@ import CustomDropdown from "../components/CustomDropdown";
 import LoadingSpinner from "../components/Loading/LoadingSpinner";
 import Pagination from "../components/Pagination";
 import InputBox from "../components/InputBox";
+import ViewLeadModal from "../components/ViewLeadModal";
 
 interface Company {
   _id: string;
@@ -46,6 +47,8 @@ export default function Contacts() {
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   // Column configuration with localStorage persistence
   const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>(() => {
@@ -333,14 +336,28 @@ export default function Contacts() {
                 </tr>
               ) : (
                 contacts.map((contact) => (
-                  <tr key={contact._id} className="hover:bg-gray-50">
+                  <tr
+                    key={contact._id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedContact(contact);
+                      setShowViewModal(true);
+                    }}
+                  >
                     {visibleColumns.map((column) => {
                       if (column.accessor === "_id") {
                         return (
-                          <td key={column.accessor} className="px-6 py-4">
+                          <td
+                            key={column.accessor}
+                            className="px-6 py-4"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Checkbox
                               checked={selectedContacts.includes(contact._id)}
-                              onChange={() => toggleSelectContact(contact._id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleSelectContact(contact._id);
+                              }}
                             />
                           </td>
                         );
@@ -500,7 +517,11 @@ export default function Contacts() {
 
                       if (column.accessor === "whatsapp") {
                         return (
-                          <td key={column.accessor} className="px-6 py-4">
+                          <td
+                            key={column.accessor}
+                            className="px-6 py-4"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
                               onClick={() =>
                                 handleStartWhatsAppConversation(contact)
@@ -606,6 +627,17 @@ export default function Contacts() {
         title="Column Settings"
         description="Show or hide columns to customize your view. Your preferences will be saved."
         excludeAccessors={["_id"]}
+      />
+
+      {/* View Lead Modal */}
+      <ViewLeadModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedContact(null);
+        }}
+        contact={selectedContact}
+        onStartWhatsApp={handleStartWhatsAppConversation}
       />
     </div>
   );

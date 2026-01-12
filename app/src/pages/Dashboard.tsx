@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
+  Building2,
+  UserPlus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { DashboardStats, Campaign } from "../types";
@@ -63,7 +65,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -100,17 +102,51 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">
-                Total Contacts
+                Total Leads
               </p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {stats?.totalContacts || 0}
+                {stats?.totalLeads || 0}
               </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
-              <Users className="h-8 w-8 text-purple-600" />
+              <UserPlus className="h-8 w-8 text-purple-600" />
             </div>
           </div>
         </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">
+                Active Leads
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {stats?.activeLeads || 0}
+              </p>
+            </div>
+            <div className="p-3 bg-indigo-100 rounded-lg">
+              <Users className="h-8 w-8 text-indigo-600" />
+            </div>
+          </div>
+        </div>
+
+        {stats?.totalCompanies !== undefined && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Companies
+                </p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats.totalCompanies}
+                </p>
+              </div>
+              <div className="p-3 bg-cyan-100 rounded-lg">
+                <Building2 className="h-8 w-8 text-cyan-600" />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
@@ -155,55 +191,109 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {stats?.recentCampaigns && stats.recentCampaigns.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Recent Campaigns
-            </h2>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {stats.recentCampaigns.map((campaign) => (
-              <div
-                key={campaign._id}
-                className="px-6 py-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">
-                      {campaign.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {campaign.description || "No description"}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        campaign.status === "running"
-                          ? "bg-green-100 text-green-700"
-                          : campaign.status === "completed"
-                          ? "bg-blue-100 text-blue-700"
-                          : campaign.status === "scheduled"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {campaign.status}
-                    </span>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {campaign.sentCount}/{campaign.totalContacts}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Campaigns */}
+        {stats?.recentCampaigns && stats.recentCampaigns.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Recent Campaigns
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {stats.recentCampaigns.map((campaign) => (
+                <div
+                  key={campaign._id}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {campaign.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {campaign.description || "No description"}
                       </p>
-                      <p className="text-xs text-gray-500">sent</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          campaign.status === "running"
+                            ? "bg-green-100 text-green-700"
+                            : campaign.status === "completed"
+                            ? "bg-blue-100 text-blue-700"
+                            : campaign.status === "scheduled"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {campaign.status}
+                      </span>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">
+                          {campaign.sentCount}/{campaign.totalContacts}
+                        </p>
+                        <p className="text-xs text-gray-500">sent</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Recent Leads */}
+        {stats?.recentLeads && stats.recentLeads.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Recent Leads
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {stats.recentLeads.map((lead) => (
+                <div
+                  key={lead._id}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {lead.name}
+                      </h3>
+                      <div className="flex items-center space-x-3 mt-1">
+                        {lead.email && (
+                          <p className="text-xs text-gray-500">{lead.email}</p>
+                        )}
+                        {lead.phone && (
+                          <p className="text-xs text-gray-500">{lead.phone}</p>
+                        )}
+                      </div>
+                      {lead.company && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          {lead.company}
+                        </p>
+                      )}
+                    </div>
+                    {lead.status && (
+                      <span
+                        className="px-2 py-1 rounded-full text-xs font-medium ml-3"
+                        style={{
+                          backgroundColor: lead.status.color,
+                          color: "#ffffff",
+                        }}
+                      >
+                        {lead.status.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
