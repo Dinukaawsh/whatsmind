@@ -149,11 +149,34 @@ export default function Contacts() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handleStartWhatsAppConversation = (contact: Contact) => {
-    const cleanNumber = contact.phoneNumber.replace(/[^0-9+]/g, "");
-    const whatsappUrl = `https://wa.me/${cleanNumber}`;
-    window.open(whatsappUrl, "_blank");
-    toast.success(`Opening WhatsApp chat with ${contact.name}`);
+  const handleStartWhatsAppConversation = async (contact: Contact) => {
+    try {
+      // Call API to start chat and trigger n8n webhook
+      const response = await fetch("/api/chat/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          leadId: contact._id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Chat initiated successfully!");
+        // Optionally open WhatsApp after successful initiation
+        const cleanNumber = contact.phoneNumber.replace(/[^0-9+]/g, "");
+        const whatsappUrl = `https://wa.me/${cleanNumber}`;
+        window.open(whatsappUrl, "_blank");
+      } else {
+        toast.error(data.error || "Failed to start chat");
+      }
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("An error occurred while starting the chat");
+    }
   };
 
   const toggleColumnVisibility = (accessor: string) => {
