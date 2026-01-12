@@ -14,7 +14,16 @@ function getUserFromToken(request: NextRequest) {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      userId: string;
+      role: string;
+    };
+
+    // Verify user is Admin
+    if (decoded.role !== "Admin") {
+      return null;
+    }
+
     return decoded.userId;
   } catch {
     return null;
@@ -25,7 +34,10 @@ export async function GET(request: NextRequest) {
   try {
     const userId = getUserFromToken(request);
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized. Only Admin users can access this resource." },
+        { status: 403 }
+      );
     }
 
     await connectDB();

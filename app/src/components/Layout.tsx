@@ -28,7 +28,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{
     id: string;
     email: string;
-    username: string;
+    name?: string;
+    role: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,6 +43,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const fetchUser = async () => {
       try {
+        // First try to verify app token
         const response = await fetch("/api/auth/verify", {
           credentials: "include",
         });
@@ -49,12 +51,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           const data = await response.json();
           if (data.user) {
             setUser(data.user);
-          } else {
-            window.location.href = "/login";
+            setIsLoading(false);
+            return;
           }
-        } else {
-          window.location.href = "/login";
         }
+
+        // If app token doesn't exist, try to sync CRM session
+        const syncResponse = await fetch("/api/auth/sync-crm", {
+          credentials: "include",
+        });
+        if (syncResponse.ok) {
+          const syncData = await syncResponse.json();
+          if (syncData.user) {
+            setUser(syncData.user);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // No valid session found, redirect to login
+        window.location.href = "/login";
       } catch (error) {
         console.error("Error fetching user:", error);
         window.location.href = "/login";
@@ -158,7 +174,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   Logged in as
                 </p>
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user.username}
+                  {user.name || user.email}
                 </p>
               </div>
             )}

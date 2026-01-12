@@ -15,15 +15,27 @@ export async function GET(request: NextRequest) {
 
     const decoded = jwt.verify(token, JWT_SECRET) as {
       userId: string;
-      username: string;
       email: string;
+      role: string;
+      name?: string;
     };
+
+    // Verify user is Admin
+    if (decoded.role !== "Admin") {
+      return NextResponse.json(
+        {
+          error: "Access denied. Only Admin users can access this application.",
+        },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       user: {
         id: decoded.userId,
-        username: decoded.username,
         email: decoded.email,
+        role: decoded.role,
+        name: decoded.name,
       },
     });
   } catch (error) {

@@ -2,24 +2,26 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!username || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Username and password are required" },
+        { error: "Email and password are required" },
         { status: 400 }
       );
     }
 
     await connectDB();
 
-    const user = await User.findOne({ username });
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       return NextResponse.json(
@@ -28,7 +30,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    // Check if user is Admin
+    if (user.role !== "Admin") {
+      return NextResponse.json(
+        {
+          error: "Access denied. Only Admin users can access this application.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if user status is Enabled
+    if (user.status !== "Enabled") {
+      return NextResponse.json(
+        { error: "Account is disabled. Please contact administrator." },
+        { status: 403 }
+      );
+    }
+
+    // Verify password - handle both hashed and plain text comparison
+    let isPasswordValid = false;
+    if (user.comparePassword) {
+      isPasswordValid = await user.comparePassword(password);
+    } else {
+      // Fallback: direct bcrypt comparison if method doesn't exist
+      isPasswordValid = await bcrypt.compare(password, user.password);
+    }
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -37,8 +64,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Create JWT token with role included
     const token = jwt.sign(
-      { userId: user._id, username: user.username, email: user.email },
+      {
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+        name: user.name || user.email,
+      },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -47,8 +80,9 @@ export async function POST(request: Request) {
       message: "Login successful",
       user: {
         id: user._id,
-        username: user.username,
         email: user.email,
+        name: user.name,
+        role: user.role,
       },
     });
 

@@ -2,12 +2,15 @@
 
 WhatsMind is a comprehensive WhatsApp automation platform that allows you to manage campaigns, contacts, and track engagement metrics. Built with Next.js, TypeScript, MongoDB, and modern web technologies.
 
+**🔐 Integrated with CRM**: WhatsMind shares authentication with your CRM application. Admin users logged into CRM can seamlessly access WhatsMind without re-authentication.
+
 ## Features
 
 - 🤖 **Campaign Management** - Create, schedule, and manage WhatsApp campaigns
 - 👥 **Contact Management** - Import, organize, and segment your contacts
 - 📊 **Analytics Dashboard** - Track delivery rates, reply rates, and engagement metrics
-- 🔐 **Secure Authentication** - JWT-based authentication with secure cookie management
+- 🔐 **CRM Integration** - Seamless authentication sharing with CRM (Admin-only access)
+- 🔑 **Secure Authentication** - JWT-based with NextAuth session support
 - 📱 **WhatsApp Integration** - Direct integration with WhatsApp Business API
 - 🐳 **Docker Support** - Easy deployment with Docker and Docker Compose
 - 📈 **Real-time Tracking** - Monitor message status in real-time
@@ -16,8 +19,8 @@ WhatsMind is a comprehensive WhatsApp automation platform that allows you to man
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Database:** MongoDB with Mongoose ODM
-- **Authentication:** JWT with bcryptjs
+- **Database:** MongoDB with Mongoose ODM (Shared with CRM)
+- **Authentication:** JWT + NextAuth session sharing
 - **UI Components:** Lucide React icons
 - **Charts:** Recharts
 - **Styling:** Tailwind CSS
@@ -26,10 +29,29 @@ WhatsMind is a comprehensive WhatsApp automation platform that allows you to man
 ## Prerequisites
 
 - Node.js 20.x or higher
-- MongoDB 7.0 or higher
+- MongoDB 7.0 or higher (shared with CRM)
+- Access to CRM's NEXTAUTH_SECRET
 - WhatsApp Business API credentials (optional for development)
 
 ## Getting Started
+
+### Quick Setup with Script
+
+The easiest way to set up authentication:
+
+```bash
+# Run the interactive setup script
+./setup-auth.sh
+```
+
+This script will:
+
+- Create .env file from template
+- Prompt for required CRM credentials
+- Test database connectivity
+- Verify admin users exist
+
+### Manual Setup
 
 ### 1. Clone the repository
 
@@ -44,7 +66,17 @@ cd whats-mind
 npm install
 ```
 
-### 3. Set up environment variables
+### 3. Configure CRM Integration
+
+**IMPORTANT**: WhatsMind shares authentication with your CRM. You need:
+
+1. **Same MongoDB database** as CRM
+2. **Same NEXTAUTH_SECRET** as CRM
+3. At least one **Admin user** in the database
+
+See [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for detailed configuration guide.
+
+### 4. Set up environment variables
 
 Copy the example environment file and configure it:
 
@@ -52,15 +84,18 @@ Copy the example environment file and configure it:
 cp .env.example .env
 ```
 
-Edit `.env` and configure the following variables:
+**Critical Configuration:**
 
 ```env
-# JWT Secret - Generate a secure random string
+# Must match CRM's JWT secret
 JWT_SECRET=your-super-secret-jwt-key-min-32-characters
 
-# MongoDB Configuration
+# MUST MATCH CRM's NEXTAUTH_SECRET - This is critical!
+NEXTAUTH_SECRET=same-as-crm-nextauth-secret
+
+# MUST point to the SAME database as CRM
 MONGODB_URI=mongodb://localhost:27017/
-MONGODB_DATABASE=whatsmind
+MONGODB_DATABASE=your-crm-database-name  # Same as CRM!
 
 # WhatsApp Configuration (optional for development)
 WHATSAPP_API_URL=https://graph.facebook.com/v18.0
@@ -69,27 +104,16 @@ WHATSAPP_ACCESS_TOKEN=your-access-token
 WHATSAPP_WEBHOOK_VERIFY_TOKEN=your-verify-token
 ```
 
-### 4. Start MongoDB
+### 5. Verify Admin User Exists
 
-If you have MongoDB installed locally:
-
-```bash
-mongod
-```
-
-Or use Docker:
+WhatsMind requires users with `role: "Admin"` and `status: "Enabled"`:
 
 ```bash
-docker run -d -p 27017:27017 --name mongodb mongo:7.0
+# Check if admin users exist in your CRM database
+mongosh "mongodb://localhost:27017/your-crm-database" --eval "db.users.find({role: 'Admin', status: 'Enabled'}).pretty()"
 ```
 
-### 5. Create an admin user
-
-```bash
-node scripts/createUser.js
-```
-
-Follow the prompts to create your first user.
+If no admin users exist, update a user or create one in your CRM.
 
 ### 6. Run the development server
 
@@ -98,6 +122,28 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Authentication Flow
+
+### For Users Already Logged into CRM
+
+1. Open WhatsMind in browser
+2. **Automatically logged in** (no credentials needed)
+3. Start using the application
+
+### For Users Not Logged into CRM
+
+1. Open WhatsMind login page
+2. Enter your **CRM admin credentials**
+3. Login and access the application
+
+### Logging Out
+
+- Logout from WhatsMind: Clears WhatsMind session only
+- If still logged into CRM, refresh to auto-login again
+- Logout from CRM: Clears both sessions
+
+📖 **For detailed authentication documentation, see [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md)**
 
 ## Docker Deployment
 

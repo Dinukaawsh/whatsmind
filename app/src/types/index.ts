@@ -61,9 +61,10 @@ export interface Message {
 export interface User {
   _id: string;
   email: string;
-  username: string;
-  createdAt: string;
-  updatedAt: string;
+  name?: string;
+  role: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardStats {

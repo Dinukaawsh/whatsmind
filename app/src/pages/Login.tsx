@@ -1,21 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Login() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingCrm, setCheckingCrm] = useState(true);
+
+  // Check for CRM session on component mount
+  useEffect(() => {
+    const checkCrmSession = async () => {
+      try {
+        const response = await fetch("/api/auth/sync-crm", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            // CRM session exists and user is Admin, auto-login
+            toast.success("Logged in with CRM session");
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 500);
+            return;
+          }
+        }
+      } catch (error) {
+        // No CRM session or error, continue to login form
+        console.log("No CRM session found, showing login form");
+      } finally {
+        setCheckingCrm(false);
+      }
+    };
+
+    checkCrmSession();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username || !password) {
-      toast.error("Please enter username and password");
+    if (!email || !password) {
+      toast.error("Please enter email and password");
       return;
     }
 
@@ -27,7 +59,7 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -49,6 +81,18 @@ export default function Login() {
     }
   };
 
+  // Show loading while checking CRM session
+  if (checkingCrm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking CRM session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
@@ -63,18 +107,18 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Username
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               disabled={loading}
             />
           </div>

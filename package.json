@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "bash setup-auth.sh",
+    "validate": "bash validate-config.sh",
+    "db:check": "mongosh $MONGODB_URI$MONGODB_DATABASE --eval 'db.users.find({role: \"Admin\", status: \"Enabled\"}).pretty()'",
+    "db:admins": "mongosh $MONGODB_URI$MONGODB_DATABASE --eval 'db.users.countDocuments({role: \"Admin\", status: \"Enabled\"})'"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -19,7 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.555.0",
     "mongoose": "^9.0.0",
-    "next": "16.0.3",
+    "next": "^16.1.1",
     "next-auth": "^4.24.13",
     "papaparse": "^5.5.3",
     "react": "19.2.0",
@@ -34,7 +38,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
