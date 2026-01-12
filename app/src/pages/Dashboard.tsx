@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { DashboardStats, Campaign } from "../types";
+import LoadingSpinner from "../components/Loading/LoadingSpinner";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <LoadingSpinner />
       </div>
     );
   }

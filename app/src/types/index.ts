@@ -38,10 +38,23 @@ export interface Contact {
     number: string;
   }>;
   email?: string;
+  source?: string;
+  campaign?: string;
+  project?: string;
+  status?: {
+    _id: string;
+    name: string;
+    color: string;
+    isLocked?: boolean;
+  } | null;
+  assignedTo?: {
+    _id: string;
+    name: string;
+    email: string;
+  } | null;
   tags?: string[];
   customFields?: Record<string, string>;
-  status: "active" | "unsubscribed" | "blocked";
-  source?: string; // e.g., "CRM Lead"
+  dateInscription?: string;
   lastMessageAt?: string;
   createdAt: string;
   updatedAt: string;

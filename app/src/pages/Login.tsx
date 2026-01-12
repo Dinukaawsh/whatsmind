@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Mail, Lock } from "lucide-react";
 import toast from "react-hot-toast";
+import LoadingSpinner from "../components/Loading/LoadingSpinner";
+import InputBox from "../components/InputBox";
 
 export default function Login() {
   const router = useRouter();
@@ -86,7 +88,7 @@ export default function Login() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <LoadingSpinner className="mb-4" />
           <p className="text-gray-600">Checking CRM session...</p>
         </div>
       </div>
@@ -112,14 +114,14 @@ export default function Login() {
             >
               Email
             </label>
-            <input
+            <InputBox
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
               placeholder="Enter your email"
               disabled={loading}
+              icon={<Mail className="h-5 w-5 text-gray-400" />}
             />
           </div>
 
@@ -130,14 +132,14 @@ export default function Login() {
             >
               Password
             </label>
-            <input
+            <InputBox
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
               placeholder="Enter your password"
               disabled={loading}
+              icon={<Lock className="h-5 w-5 text-gray-400" />}
             />
           </div>
 

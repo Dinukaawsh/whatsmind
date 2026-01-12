@@ -18,11 +18,16 @@ export interface ILead {
     country?: string;
     postCode?: string;
   };
+  source?: string;
+  campaign?: string;
+  project?: string;
   status?: mongoose.Types.ObjectId;
   tags?: mongoose.Types.ObjectId[];
   assignedTo?: mongoose.Types.ObjectId;
   companyId?: mongoose.Types.ObjectId;
   isActive: boolean;
+  leadType?: string;
+  dateInscription?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +66,11 @@ const LeadSchema = new Schema<ILead, LeadModel>(
       country: { type: String },
       postCode: { type: String },
     },
+    source: { type: String },
+    campaign: { type: String },
+    project: { type: String },
+    leadType: { type: String },
+    dateInscription: { type: Date, default: Date.now },
     status: {
       type: Schema.Types.ObjectId,
       ref: "Status",
