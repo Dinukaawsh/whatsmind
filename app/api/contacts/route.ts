@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
-import Contact from "@/lib/models/Contact";
+import Lead from "@/lib/models/Lead";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET =
@@ -41,24 +41,61 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
     const search = searchParams.get("search");
+    const status = searchParams.get("status");
 
-    const query: any = { userId };
-    if (status) {
-      query.status = status;
-    }
+    // Build query to fetch active leads from CRM database
+    const query: any = { 
+      isActive: true // Only fetch active leads
+    };
+
+    // Add search filter if provided
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { phoneNumber: { $regex: search, $options: "i" } },
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
+        { "phone.number": { $regex: search, $options: "i" } },
       ];
     }
 
-    const contacts = await Contact.find(query).sort({ createdAt: -1 });
+    // Fetch leads and transform to contact format
+    const leads = await Lead.find(query)
+      .select("firstName lastName email phone isActive createdAt updatedAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json({ contacts });
+    // Transform leads to contact format for frontend
+    const contacts = leads.map((lead) => {
+      // Get primary phone number (prefer mobile, then work, then home)
+      const mobilePhone = lead.phone.find((p) => p.type === "mobile");
+      const workPhone = lead.phone.find((p) => p.type === "work");
+      const primaryPhone = mobilePhone || workPhone || lead.phone[0];
+
+      return {
+        _id: lead._id.toString(),
+        name: `${lead.firstName} ${lead.lastName}`.trim(),
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        phoneNumber: primaryPhone?.number || "",
+        phoneType: primaryPhone?.type || "mobile",
+        allPhones: lead.phone.map(p => ({
+          type: p.type,
+          number: p.number
+        })),
+        email: lead.email,
+        status: "active", // All leads from CRM are considered active contacts
+        tags: [], // Can be enhanced later with lead tags
+        source: "CRM Lead",
+        createdAt: lead.createdAt,
+        updatedAt: lead.updatedAt,
+      };
+    });
+
+    return NextResponse.json({ 
+      contacts,
+      total: contacts.length
+    });
   } catch (error) {
     console.error("Get contacts error:", error);
     return NextResponse.json(

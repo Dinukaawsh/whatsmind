@@ -28,13 +28,20 @@ export interface Campaign {
 
 export interface Contact {
   _id: string;
-  userId: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   phoneNumber: string;
+  phoneType?: "work" | "home" | "mobile";
+  allPhones?: Array<{
+    type: "work" | "home" | "mobile";
+    number: string;
+  }>;
   email?: string;
   tags?: string[];
   customFields?: Record<string, string>;
   status: "active" | "unsubscribed" | "blocked";
+  source?: string; // e.g., "CRM Lead"
   lastMessageAt?: string;
   createdAt: string;
   updatedAt: string;
