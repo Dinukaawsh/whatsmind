@@ -19,6 +19,15 @@ export function middleware(request: NextRequest) {
     console.log("[Middleware] Has token:", !!token);
   }
 
+  // Log token info in production too
+  if (token) {
+    console.log("[Middleware] Token cookie found, length:", token.value.length);
+    console.log(
+      "[Middleware] Token preview:",
+      token.value.substring(0, 20) + "..."
+    );
+  }
+
   // Public paths that don't require authentication
   const publicPaths = [
     "/login",
@@ -38,7 +47,17 @@ export function middleware(request: NextRequest) {
   // Check for WhatsMind app token first
   if (token) {
     try {
-      const decoded = jwt.verify(token.value, JWT_SECRET) as {
+      // First, try to decode without verification to see what's in the token
+      const decoded = jwt.decode(token.value) as any;
+      console.log("[Middleware] Token decoded (no verification):", {
+        email: decoded?.email,
+        role: decoded?.role,
+        exp: decoded?.exp,
+        iat: decoded?.iat,
+      });
+
+      // Now verify with secret
+      const verified = jwt.verify(token.value, JWT_SECRET) as {
         userId: string;
         email: string;
         role: string;
@@ -46,14 +65,14 @@ export function middleware(request: NextRequest) {
 
       console.log(
         "[Middleware] Valid token for:",
-        decoded.email,
+        verified.email,
         "- Role:",
-        decoded.role
+        verified.role
       );
 
       // Only allow Admin users to access the application
-      if (decoded.role !== "Admin") {
-        console.log("[Middleware] Non-admin user blocked:", decoded.email);
+      if (verified.role !== "Admin") {
+        console.log("[Middleware] Non-admin user blocked:", verified.email);
         const unauthorizedUrl = new URL("/unauthorized", request.url);
         return NextResponse.redirect(unauthorizedUrl);
       }
@@ -62,7 +81,10 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     } catch (error: any) {
       // Invalid app token, check for CRM session
-      console.log("[Middleware] Token verification failed:", error.message);
+      console.error("[Middleware] Token verification failed!");
+      console.error("[Middleware] Error:", error);
+      console.error("[Middleware] Error message:", error?.message);
+      console.error("[Middleware] Error name:", error?.name);
       console.log(
         "[Middleware] JWT_SECRET being used:",
         JWT_SECRET.substring(0, 10) + "..."
