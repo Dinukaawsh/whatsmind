@@ -109,6 +109,20 @@ export async function POST(request: NextRequest) {
       webhookHeaders["Authorization"] = WEBHOOK_AUTH_HEADER;
     }
 
+    // Debug logging
+    console.log("=== WEBHOOK DEBUG ===");
+    console.log("Webhook URL:", N8N_WEBHOOK_URL);
+    console.log(
+      "Auth Header Value:",
+      WEBHOOK_AUTH_HEADER
+        ? `"${WEBHOOK_AUTH_HEADER.substring(0, 20)}..."`
+        : "✗ Not configured"
+    );
+    console.log("Auth Header Length:", WEBHOOK_AUTH_HEADER?.length || 0);
+    console.log("Payload:", JSON.stringify(webhookData, null, 2));
+    console.log("Headers:", JSON.stringify(webhookHeaders, null, 2));
+    console.log("==================");
+
     // Call n8n webhook
     if (N8N_WEBHOOK_URL) {
       try {
@@ -118,14 +132,23 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify(webhookData),
         });
 
+        console.log("Webhook response status:", webhookResponse.status);
+
         if (!webhookResponse.ok) {
           const errorText = await webhookResponse.text();
           console.error("N8N webhook error:", errorText);
           return NextResponse.json(
-            { error: "Failed to launch campaign via webhook" },
+            {
+              error: "Failed to launch campaign via webhook",
+              details: errorText,
+              webhookUrl: N8N_WEBHOOK_URL,
+            },
             { status: 500 }
           );
         }
+
+        const responseData = await webhookResponse.text();
+        console.log("Webhook response:", responseData);
       } catch (webhookError) {
         console.error("Error calling N8N webhook:", webhookError);
         return NextResponse.json(
