@@ -60,9 +60,10 @@ export function middleware(request: NextRequest) {
 
       // Token is valid and user is Admin, allow the request
       return NextResponse.next();
-    } catch (error) {
+    } catch (error: any) {
       // Invalid app token, check for CRM session
-      console.log("[Middleware] Invalid token, checking CRM session");
+      console.log("[Middleware] Token verification failed:", error.message);
+      console.log("[Middleware] JWT_SECRET being used:", JWT_SECRET.substring(0, 10) + "...");
     }
   } else {
     console.log("[Middleware] No token found for path:", pathname);

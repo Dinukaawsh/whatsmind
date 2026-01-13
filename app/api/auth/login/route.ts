@@ -70,6 +70,7 @@ export async function POST(request: Request) {
     }
 
     console.log("[Login] Login successful for:", email, "- Role:", user.role);
+    console.log("[Login] JWT_SECRET being used:", JWT_SECRET.substring(0, 10) + "...");
 
     // Create JWT token with role included
     const token = jwt.sign(
