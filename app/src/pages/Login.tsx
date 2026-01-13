@@ -69,16 +69,17 @@ export default function Login() {
       if (response.ok) {
         toast.success("Login successful!");
         // Use window.location for hard redirect to ensure cookies are loaded
+        // Add a longer delay to ensure cookie is set
         setTimeout(() => {
           window.location.href = "/";
-        }, 500);
+        }, 1000);
       } else {
         toast.error(data.error || "Login failed");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Login error:", error);
       toast.error("An error occurred during login");
-    } finally {
       setLoading(false);
     }
   };

@@ -11,6 +11,8 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
+    console.log("[Login] Attempting login for:", email);
+
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
 
     // Check if user is Admin
     if (user.role !== "Admin") {
+      console.log("[Login] User is not Admin:", email, "- Role:", user.role);
       return NextResponse.json(
         {
           error: "Access denied. Only Admin users can access this application.",
@@ -42,6 +45,7 @@ export async function POST(request: Request) {
 
     // Check if user status is Enabled
     if (user.status !== "Enabled") {
+      console.log("[Login] User account disabled:", email);
       return NextResponse.json(
         { error: "Account is disabled. Please contact administrator." },
         { status: 403 }
@@ -58,11 +62,14 @@ export async function POST(request: Request) {
     }
 
     if (!isPasswordValid) {
+      console.log("[Login] Invalid password for:", email);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
+
+    console.log("[Login] Login successful for:", email, "- Role:", user.role);
 
     // Create JWT token with role included
     const token = jwt.sign(
@@ -86,12 +93,21 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set("token", token, {
+    // Set cookie with proper production configuration for Vercel
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProduction,
+      sameSite: "lax" as const,
+      path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+    };
+
+    console.log("[Login] Setting cookie with options:", {
+      ...cookieOptions,
+      token: "[REDACTED]",
     });
+    response.cookies.set("token", token, cookieOptions);
 
     return response;
   } catch (error) {

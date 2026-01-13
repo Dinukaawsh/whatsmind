@@ -13,6 +13,12 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token");
   const { pathname } = request.nextUrl;
 
+  // Log all cookies for debugging (only in development)
+  if (process.env.NODE_ENV === "development") {
+    console.log("[Middleware] Path:", pathname);
+    console.log("[Middleware] Has token:", !!token);
+  }
+
   // Public paths that don't require authentication
   const publicPaths = [
     "/login",
@@ -38,8 +44,16 @@ export function middleware(request: NextRequest) {
         role: string;
       };
 
+      console.log(
+        "[Middleware] Valid token for:",
+        decoded.email,
+        "- Role:",
+        decoded.role
+      );
+
       // Only allow Admin users to access the application
       if (decoded.role !== "Admin") {
+        console.log("[Middleware] Non-admin user blocked:", decoded.email);
         const unauthorizedUrl = new URL("/unauthorized", request.url);
         return NextResponse.redirect(unauthorizedUrl);
       }
@@ -48,7 +62,10 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     } catch (error) {
       // Invalid app token, check for CRM session
+      console.log("[Middleware] Invalid token, checking CRM session");
     }
+  } else {
+    console.log("[Middleware] No token found for path:", pathname);
   }
 
   // Check for NextAuth session token from CRM

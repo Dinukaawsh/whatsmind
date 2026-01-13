@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get("token")?.value;
 
+    console.log("[Verify] Checking token, exists:", !!token);
+
     if (!token) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
@@ -19,6 +21,13 @@ export async function GET(request: NextRequest) {
       role: string;
       name?: string;
     };
+
+    console.log(
+      "[Verify] Token valid for:",
+      decoded.email,
+      "- Role:",
+      decoded.role
+    );
 
     // Verify user is Admin
     if (decoded.role !== "Admin") {
