@@ -56,6 +56,7 @@ export interface Contact {
   customFields?: Record<string, string>;
   dateInscription?: string;
   lastMessageAt?: string;
+  whatsappCampaignLaunched?: boolean;
   createdAt: string;
   updatedAt: string;
 }

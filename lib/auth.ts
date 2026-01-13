@@ -40,6 +40,8 @@ export async function getUserFromToken(
 
   try {
     // Verify NextAuth token
+    // Note: NextAuth tokens are encrypted, not JWTs, so this may fail
+    // This is expected when the token is from NextAuth's encrypted format
     const decoded = jwt.verify(nextAuthToken, NEXTAUTH_SECRET) as any;
 
     // NextAuth stores the user ID in token.id or token.sub
@@ -68,8 +70,11 @@ export async function getUserFromToken(
     }
 
     return user._id.toString();
-  } catch (error) {
-    console.error("Failed to verify NextAuth token:", error);
+  } catch (error: any) {
+    // Only log if it's not a malformed token (expected when no valid session)
+    if (error?.name !== "JsonWebTokenError" || error?.message !== "jwt malformed") {
+      console.error("Failed to verify NextAuth token:", error);
+    }
     return null;
   }
 }
@@ -93,6 +98,8 @@ export async function getDecodedToken(
 
   try {
     // Verify NextAuth token
+    // Note: NextAuth tokens are encrypted, not JWTs, so this may fail
+    // This is expected when the token is from NextAuth's encrypted format
     const decoded = jwt.verify(nextAuthToken, NEXTAUTH_SECRET) as any;
 
     // NextAuth stores the user ID in token.id or token.sub
@@ -116,8 +123,11 @@ export async function getDecodedToken(
       email: user.email,
       name: user.name || user.email,
     };
-  } catch (error) {
-    console.error("Failed to verify NextAuth token:", error);
+  } catch (error: any) {
+    // Only log if it's not a malformed token (expected when no valid session)
+    if (error?.name !== "JsonWebTokenError" || error?.message !== "jwt malformed") {
+      console.error("Failed to verify NextAuth token:", error);
+    }
     return null;
   }
 }

@@ -10,6 +10,7 @@ import {
   Calendar,
   Tag,
   MessageCircle,
+  Rocket,
 } from "lucide-react";
 import { Contact } from "../types";
 
@@ -18,6 +19,7 @@ interface ViewLeadModalProps {
   onClose: () => void;
   contact: Contact | null;
   onStartWhatsApp?: (contact: Contact) => void;
+  onLaunchCampaign?: (contact: Contact) => void;
 }
 
 export default function ViewLeadModal({
@@ -25,6 +27,7 @@ export default function ViewLeadModal({
   onClose,
   contact,
   onStartWhatsApp,
+  onLaunchCampaign,
 }: ViewLeadModalProps) {
   if (!contact) return null;
 
@@ -342,7 +345,19 @@ export default function ViewLeadModal({
                 >
                   Close
                 </button>
-                {onStartWhatsApp && (
+                {!contact.whatsappCampaignLaunched && onLaunchCampaign && (
+                  <button
+                    onClick={() => {
+                      onLaunchCampaign(contact);
+                      onClose();
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+                  >
+                    <Rocket className="h-4 w-4" />
+                    <span>Launch Campaign</span>
+                  </button>
+                )}
+                {contact.whatsappCampaignLaunched && onStartWhatsApp && (
                   <button
                     onClick={() => {
                       onStartWhatsApp(contact);

@@ -101,9 +101,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">
-                Total Leads
-              </p>
+              <p className="text-sm font-medium text-gray-600">Total Leads</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats?.totalLeads || 0}
               </p>
@@ -117,9 +115,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">
-                Active Leads
-              </p>
+              <p className="text-sm font-medium text-gray-600">Active Leads</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats?.activeLeads || 0}
               </p>
@@ -134,9 +130,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
-                  Companies
-                </p>
+                <p className="text-sm font-medium text-gray-600">Companies</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {stats.totalCompanies}
                 </p>

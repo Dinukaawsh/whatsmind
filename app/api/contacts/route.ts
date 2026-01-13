@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     // Fetch leads with population and pagination
     const leads = await Lead.find(query)
       .select(
-        "firstName lastName email phone source campaign project status assignedTo companyId isActive dateInscription createdAt updatedAt"
+        "firstName lastName email phone source campaign project status assignedTo companyId isActive dateInscription whatsappCampaignLaunched createdAt updatedAt"
       )
       .populate({
         path: "status",
@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
             }
           : null,
         dateInscription: lead.dateInscription,
+        whatsappCampaignLaunched: lead.whatsappCampaignLaunched || false,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
       };

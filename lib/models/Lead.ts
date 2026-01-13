@@ -28,6 +28,7 @@ export interface ILead {
   isActive: boolean;
   leadType?: string;
   dateInscription?: Date;
+  whatsappCampaignLaunched?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,6 +93,10 @@ const LeadSchema = new Schema<ILead, LeadModel>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    whatsappCampaignLaunched: {
+      type: Boolean,
+      default: false,
     },
   },
   {

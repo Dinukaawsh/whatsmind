@@ -35,11 +35,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify NextAuth token
+    // Note: NextAuth tokens are encrypted, not JWTs, so this may fail
+    // This is expected when the token is from NextAuth's encrypted format
     let decoded: any;
     try {
       decoded = jwt.verify(nextAuthToken, NEXTAUTH_SECRET);
-    } catch (error) {
-      console.error("Failed to verify NextAuth token:", error);
+    } catch (error: any) {
+      // Only log if it's not a malformed token (expected when no valid session)
+      if (
+        error?.name !== "JsonWebTokenError" ||
+        error?.message !== "jwt malformed"
+      ) {
+        console.error("Failed to verify NextAuth token:", error);
+      }
       return NextResponse.json(
         { error: "Invalid CRM session" },
         { status: 401 }

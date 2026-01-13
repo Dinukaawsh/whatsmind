@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import connectDB from "@/lib/db";
 import Lead from "@/lib/models/Lead";
-import ChatHistory from "@/lib/models/ChatHistory";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "";
+// WEBHOOK_AUTH_HEADER can be in different formats:
+// - "Bearer your-token-here" (for Bearer token auth)
+// - "your-api-key" (for simple API key auth)
+// - "Basic base64-encoded-credentials" (for Basic auth)
+// - Or leave empty if webhook doesn't require authentication
+const WEBHOOK_AUTH_HEADER = process.env.WEBHOOK_AUTH_HEADER || "";
 
 function getUserFromToken(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
@@ -54,9 +59,17 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     // Fetch lead details
-    const lead = await Lead.findById(leadId).lean();
+    const lead = await Lead.findById(leadId);
     if (!lead) {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+
+    // Check if already launched
+    if (lead.whatsappCampaignLaunched) {
+      return NextResponse.json(
+        { error: "Campaign already launched for this lead" },
+        { status: 400 }
+      );
     }
 
     // Get primary phone number
@@ -70,12 +83,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Check if chat history already exists
-    let chatHistory = await ChatHistory.findOne({
-      leadId: lead._id,
-      phone: primaryPhone.number,
-    });
 
     // Prepare data for n8n webhook
     const webhookData = {
@@ -92,44 +99,58 @@ export async function POST(request: NextRequest) {
       dateInscription: lead.dateInscription || null,
     };
 
+    // Prepare headers for webhook request
+    const webhookHeaders: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    // Add auth header if configured
+    if (WEBHOOK_AUTH_HEADER) {
+      webhookHeaders["Authorization"] = WEBHOOK_AUTH_HEADER;
+    }
+
     // Call n8n webhook
     if (N8N_WEBHOOK_URL) {
       try {
         const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: webhookHeaders,
           body: JSON.stringify(webhookData),
         });
 
         if (!webhookResponse.ok) {
-          console.error("N8N webhook error:", await webhookResponse.text());
-          // Continue even if webhook fails, we'll create the chat history anyway
+          const errorText = await webhookResponse.text();
+          console.error("N8N webhook error:", errorText);
+          return NextResponse.json(
+            { error: "Failed to launch campaign via webhook" },
+            { status: 500 }
+          );
         }
       } catch (webhookError) {
         console.error("Error calling N8N webhook:", webhookError);
-        // Continue even if webhook fails
+        return NextResponse.json(
+          { error: "Failed to connect to webhook service" },
+          { status: 500 }
+        );
       }
+    } else {
+      // If no webhook URL is configured, still update the lead
+      console.warn(
+        "N8N_WEBHOOK_URL not configured, updating lead without webhook call"
+      );
     }
 
-    // Create or update chat history
-    if (!chatHistory) {
-      chatHistory = await ChatHistory.create({
-        leadId: lead._id,
-        phone: primaryPhone.number,
-        email: lead.email || undefined,
-        messages: [],
-      });
-    }
+    // Update lead with whatsappCampaignLaunched flag
+    lead.whatsappCampaignLaunched = true;
+    await lead.save();
 
     return NextResponse.json({
       success: true,
-      chatHistoryId: chatHistory._id.toString(),
-      message: "Chat initiated successfully",
+      message: "Campaign launched successfully",
+      leadId: lead._id.toString(),
     });
   } catch (error) {
-    console.error("Start chat error:", error);
+    console.error("Launch campaign error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -10,6 +10,7 @@ import {
   Mail,
   Eye,
   X,
+  Rocket,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Contact } from "../types";
@@ -147,6 +148,41 @@ export default function Contacts() {
   const handleClearSearch = () => {
     setSearchTerm("");
     setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleLaunchCampaign = async (contact: Contact) => {
+    try {
+      // Call API to launch campaign and trigger n8n webhook
+      const response = await fetch("/api/chat/launch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          leadId: contact._id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Campaign launched successfully!");
+        // Update the contact in local state
+        const updatedContact = { ...contact, whatsappCampaignLaunched: true };
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => (c._id === contact._id ? updatedContact : c))
+        );
+        // Update selected contact if it's the one being launched
+        if (selectedContact && selectedContact._id === contact._id) {
+          setSelectedContact(updatedContact);
+        }
+      } else {
+        toast.error(data.error || "Failed to launch campaign");
+      }
+    } catch (error) {
+      console.error("Error launching campaign:", error);
+      toast.error("An error occurred while launching the campaign");
+    }
   };
 
   const handleStartWhatsAppConversation = async (contact: Contact) => {
@@ -539,22 +575,37 @@ export default function Contacts() {
                       }
 
                       if (column.accessor === "whatsapp") {
+                        const isLaunched =
+                          contact.whatsappCampaignLaunched === true;
                         return (
                           <td
                             key={column.accessor}
                             className="px-6 py-4"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              onClick={() =>
-                                handleStartWhatsAppConversation(contact)
-                              }
-                              className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                              title="Start WhatsApp Conversation"
-                            >
-                              <MessageCircle className="h-4 w-4 mr-1" />
-                              Chat
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              {!isLaunched ? (
+                                <button
+                                  onClick={() => handleLaunchCampaign(contact)}
+                                  className="flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                  title="Launch WhatsApp Campaign"
+                                >
+                                  <Rocket className="h-4 w-4 mr-1" />
+                                  Launch
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() =>
+                                    handleStartWhatsAppConversation(contact)
+                                  }
+                                  className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                  title="Start WhatsApp Conversation"
+                                >
+                                  <MessageCircle className="h-4 w-4 mr-1" />
+                                  Chat
+                                </button>
+                              )}
+                            </div>
                           </td>
                         );
                       }
@@ -661,6 +712,7 @@ export default function Contacts() {
         }}
         contact={selectedContact}
         onStartWhatsApp={handleStartWhatsAppConversation}
+        onLaunchCampaign={handleLaunchCampaign}
       />
     </div>
   );
