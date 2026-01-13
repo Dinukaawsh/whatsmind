@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -9,24 +9,9 @@ const JWT_SECRET =
 const NEXTAUTH_TOKEN_PROD = "__Secure-next-auth.session-token";
 const NEXTAUTH_TOKEN_DEV = "next-auth.session-token";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token");
   const { pathname } = request.nextUrl;
-
-  // Log all cookies for debugging (only in development)
-  if (process.env.NODE_ENV === "development") {
-    console.log("[Middleware] Path:", pathname);
-    console.log("[Middleware] Has token:", !!token);
-  }
-
-  // Log token info in production too
-  if (token) {
-    console.log("[Middleware] Token cookie found, length:", token.value.length);
-    console.log(
-      "[Middleware] Token preview:",
-      token.value.substring(0, 20) + "..."
-    );
-  }
 
   // Public paths that don't require authentication
   const publicPaths = [
@@ -47,48 +32,29 @@ export function middleware(request: NextRequest) {
   // Check for WhatsMind app token first
   if (token) {
     try {
-      // First, try to decode without verification to see what's in the token
-      const decoded = jwt.decode(token.value) as any;
-      console.log("[Middleware] Token decoded (no verification):", {
-        email: decoded?.email,
-        role: decoded?.role,
-        exp: decoded?.exp,
-        iat: decoded?.iat,
-      });
+      // Verify JWT using jose (Edge Runtime compatible)
+      const secret = new TextEncoder().encode(JWT_SECRET);
+      const { payload } = await jwtVerify(token.value, secret);
 
-      // Now verify with secret
-      const verified = jwt.verify(token.value, JWT_SECRET) as {
-        userId: string;
-        email: string;
-        role: string;
-      };
+      const email = payload.email as string;
+      const role = payload.role as string;
 
-      console.log(
-        "[Middleware] Valid token for:",
-        verified.email,
-        "- Role:",
-        verified.role
-      );
+      console.log("[Middleware] Valid token for:", email, "- Role:", role);
 
       // Only allow Admin users to access the application
-      if (verified.role !== "Admin") {
-        console.log("[Middleware] Non-admin user blocked:", verified.email);
+      if (role !== "Admin") {
+        console.log("[Middleware] Non-admin user blocked:", email);
         const unauthorizedUrl = new URL("/unauthorized", request.url);
         return NextResponse.redirect(unauthorizedUrl);
       }
 
       // Token is valid and user is Admin, allow the request
       return NextResponse.next();
-    } catch (error: any) {
+    } catch (error) {
       // Invalid app token, check for CRM session
-      console.error("[Middleware] Token verification failed!");
-      console.error("[Middleware] Error:", error);
-      console.error("[Middleware] Error message:", error?.message);
-      console.error("[Middleware] Error name:", error?.name);
-      console.log(
-        "[Middleware] JWT_SECRET being used:",
-        JWT_SECRET.substring(0, 10) + "..."
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.log("[Middleware] Token verification failed:", errorMessage);
     }
   } else {
     console.log("[Middleware] No token found for path:", pathname);
