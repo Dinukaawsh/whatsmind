@@ -53,7 +53,7 @@ export default function ViewLeadModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.1 }}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-50 bg-black/40"
             onClick={onClose}
           />
 
@@ -72,8 +72,6 @@ export default function ViewLeadModal({
           >
             <motion.div
               className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-gray-200/50 pointer-events-auto overflow-hidden"
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
@@ -222,10 +220,12 @@ export default function ViewLeadModal({
                         </h4>
                       </div>
                       <span
-                        className="px-3 py-1 rounded-full text-xs font-medium inline-block"
+                        className="px-3 py-1 rounded-full text-xs font-medium inline-block border"
                         style={{
-                          backgroundColor: contact.status.color || "#059669",
-                          color: "#ffffff",
+                          backgroundColor: `${(contact.status.color ||
+                            "#059669") + "26"}`,
+                          color: "#05112b",
+                          borderColor: contact.status.color || "#059669",
                         }}
                       >
                         {contact.status.name || "active"}

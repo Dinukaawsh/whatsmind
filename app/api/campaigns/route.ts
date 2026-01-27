@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
       targetContactIds,
       tags,
       settings,
+      initialStatus,
     } = body;
 
     if (!name || !messageTemplate) {
@@ -100,12 +101,153 @@ export async function POST(request: NextRequest) {
       totalContacts: targetContactIds?.length || 0,
       tags,
       settings,
-      status: scheduledAt ? "scheduled" : "draft",
+      status: initialStatus || (scheduledAt ? "scheduled" : "draft"),
     });
 
     return NextResponse.json({ campaign }, { status: 201 });
   } catch (error) {
     console.error("Create campaign error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const userId = getUserFromToken(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized. Only Admin users can access this resource." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      campaignId,
+      status,
+      name,
+      description,
+      messageTemplate,
+      tags,
+      settings,
+    } = body as {
+      campaignId?: string;
+      status?: string;
+      name?: string;
+      description?: string;
+      messageTemplate?: string;
+      tags?: string[];
+      settings?: any;
+    };
+
+    if (!campaignId) {
+      return NextResponse.json(
+        { error: "campaignId is required" },
+        { status: 400 }
+      );
+    }
+
+    const update: any = {};
+
+    if (typeof status === "string") {
+      const allowedStatuses = [
+        "draft",
+        "scheduled",
+        "running",
+        "paused",
+        "completed",
+        "failed",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return NextResponse.json(
+          { error: "Invalid status value" },
+          { status: 400 }
+        );
+      }
+
+      update.status = status;
+    }
+
+    if (typeof name === "string") {
+      update.name = name;
+    }
+    if (typeof description === "string") {
+      update.description = description;
+    }
+    if (typeof messageTemplate === "string") {
+      update.messageTemplate = messageTemplate;
+    }
+    if (Array.isArray(tags)) {
+      update.tags = tags;
+    }
+    if (settings && typeof settings === "object") {
+      update.settings = settings;
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json(
+        { error: "No valid fields provided to update" },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    const campaign = await Campaign.findOneAndUpdate(
+      { _id: campaignId, userId },
+      update,
+      { new: true }
+    );
+
+    if (!campaign) {
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ campaign });
+  } catch (error) {
+    console.error("Update campaign status error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const userId = getUserFromToken(request);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized. Only Admin users can access this resource." },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Campaign id is required" },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    const deleted = await Campaign.findOneAndDelete({ _id: id, userId });
+
+    if (!deleted) {
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete campaign error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

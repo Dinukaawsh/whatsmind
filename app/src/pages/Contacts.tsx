@@ -484,21 +484,25 @@ export default function Contacts() {
                           <td key={column.accessor} className="px-6 py-4">
                             {contact.status ? (
                               <span
-                                className="px-3 py-1 rounded-full text-xs font-medium"
+                                className="px-3 py-1 rounded-full text-xs font-medium border"
                                 style={{
-                                  backgroundColor:
+                                  backgroundColor: hexToRgba(
                                     contact.status.color || "#059669",
-                                  color: "#ffffff",
+                                    0.3
+                                  ),
+                                  color: "#05112b",
+                                  borderColor: contact.status.color || "#059669",
                                 }}
                               >
                                 {contact.status.name || "active"}
                               </span>
                             ) : (
                               <span
-                                className={`px-3 py-1 rounded-full text-xs font-medium`}
+                                className="px-3 py-1 rounded-full text-xs font-medium border"
                                 style={{
-                                  backgroundColor: "#059669",
-                                  color: "#ffffff",
+                                  backgroundColor: hexToRgba("#059669", 0.3),
+                                  color: "#05112b",
+                                  borderColor: "#059669",
                                 }}
                               >
                                 active
